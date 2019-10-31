@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,9 +20,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class DownloadAndConvert {
 
@@ -213,12 +213,26 @@ public class DownloadAndConvert {
 		return res;
 	}
 
-
-	public static void unzip(String zipFilepath, String destinationFolder){	   
-		try {
-			ZipFile zipFile = new ZipFile(zipFilepath);	        
-			zipFile.extractAll(destinationFolder);
-		} catch (ZipException e) {
+	public static void unzip(String zipFilepath, String destinationFolder)	{ 		
+		byte[] buffer = new byte[1024];
+		File newFile;
+		int len;
+		ZipEntry zipEntry;
+		try(ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFilepath))) {
+			zipEntry = zis.getNextEntry();
+			while (zipEntry != null) {
+				newFile = new File(destinationFolder + File.separator + zipEntry);
+				try(FileOutputStream fos = new FileOutputStream(newFile)){
+					while ((len = zis.read(buffer)) > 0) {
+						fos.write(buffer, 0, len);
+					}
+				}
+				zipEntry = zis.getNextEntry();
+			}
+			zis.closeEntry();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
