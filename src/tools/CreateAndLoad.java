@@ -284,15 +284,15 @@ public class CreateAndLoad {
 		System.out.println("There is no mandatory argument but you might need (or just want) to set some of them.");		
 		System.out.println();
 		System.out.println("MySQL related parameters");
-		System.out.println("\t-d/--database [DATABASE_NAME]: Database name (DEFAULT=\""+DB+"\"");
-		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\"");
-		System.out.println("\t-p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT=\""+PASSWORD+"\"");
-		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\"");
+		System.out.println("\t-d/--database [DATABASE_NAME]: Database name (DEFAULT=\""+DB+"\")");
+		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\")");
+		System.out.println("\t-p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT=\""+PASSWORD+"\")");
+		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\")");
 		System.out.println("\t--drop: Drop previous database with the same name (DEFAULT=\""+String.valueOf(DROP_IF_EXIST)+"\")");
 		System.out.println();
 		System.out.println("Other parameters: ");
-		System.out.println("\t-i/--init [INIT_FILEPATH]: Filepath of the sql init file (DEFAULT=\""+INIT_FILEPATH+"\"");
-		System.out.println("\t-t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT=\""+TEMP_CSV_FOLDER+"\"");
+		System.out.println("\t-i/--init [INIT_FILEPATH]: Filepath of the sql init file (DEFAULT=\""+INIT_FILEPATH+"\")");
+		System.out.println("\t-t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT=\""+TEMP_CSV_FOLDER+"\")");
 		System.out.println("\t--keep: Do not delete the temporary folder and all its content before exiting "
 				+ "(DEFAULT=\""+String.valueOf(!CLEAN_AFTER)+"\")");
 		System.out.println("\t--no-download: Do not attempt to download the lastest dump and instead "
