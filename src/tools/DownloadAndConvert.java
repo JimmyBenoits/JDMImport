@@ -216,11 +216,16 @@ public class DownloadAndConvert {
 	public static void unzip(String zipFilepath, String destinationFolder)	{ 		
 		byte[] buffer = new byte[1024];
 		File newFile;
+		File subfolder;
 		int len;
 		ZipEntry zipEntry;
 		try(ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFilepath))) {
 			zipEntry = zis.getNextEntry();
-			while (zipEntry != null) {
+			subfolder = new File(destinationFolder + File.separator + "JDM-LEXICALNET-FR");
+			if(!subfolder.exists()) {
+				subfolder.mkdir();
+			}
+			while (zipEntry != null) {				
 				newFile = new File(destinationFolder + File.separator + zipEntry);
 				try(FileOutputStream fos = new FileOutputStream(newFile)){
 					while ((len = zis.read(buffer)) > 0) {
