@@ -6,50 +6,22 @@ import java.text.DecimalFormat;
 
 public class CreateAndLoad {
 
-	private static final String DB_DEFAULT = "rezoJDM";
-	private static final String USERNAME_DEFAULT = "root";
-	private static final String PASSWORD_DEFAULT = "";
+	private static String DB = "rezoJDM"; //-d or --database
+	private static String USERNAME = "root"; //-u or --username
+	private static String PASSWORD = ""; //-p or --password 
 
 
-	private static final boolean DOWNLOAD_LAST_DUMP_DEFAULT = true;
-	private static final boolean DROP_IF_EXIST_DEFAULT = false;
-	private static final boolean CLEAN_AFTER_DEFAULT = true;
-	private static final String INIT_FILEPATH_DEFAULT = "init.sql";
-	private static final String TEMP_CSV_FOLDER_DEFAULT = "__tmpRezoJDMCSV";
-
-
+	private static boolean DOWNLOAD_LAST_DUMP = true; //--no-download (flag)
+	private static boolean DROP_IF_EXIST = false; // --drop (flag)
+	private static boolean CLEAN_AFTER = true; // --keep (flag)
+	private static String INIT_FILEPATH = "init.sql"; //-i or --init 
+	private static String TEMP_CSV_FOLDER = "__tmpRezoJDMCSV"; //-t or --temp
 
 
 
 	public static void main(String[] args) {		
-		String db = DB_DEFAULT;
-		String username = USERNAME_DEFAULT;
-		String password = PASSWORD_DEFAULT;		
-
-		boolean downloadLastDump = DOWNLOAD_LAST_DUMP_DEFAULT;
-		boolean dropIfExist = DROP_IF_EXIST_DEFAULT;
-		boolean cleanAfter = CLEAN_AFTER_DEFAULT;
-		String initFilepath = INIT_FILEPATH_DEFAULT;
-		String tempCSVFolder = TEMP_CSV_FOLDER_DEFAULT; 
-
-		String arg;
-		if(args.length>0) {
-			arg = args[0];
-			if(arg.startsWith("-h") || arg.startsWith("--h")) {
-				usage();
-			}else {
-				db = arg;
-				if(args.length > 1) {
-					username = args[1];
-					if(args.length > 2) {
-						password = args[2];
-					}
-				}
-			}			
-		}
-
-		boolean hasPassword = !password.isEmpty();
-
+		argsProcess(args);		
+		boolean hasPassword = !PASSWORD.isEmpty();
 
 		long timer;
 		DecimalFormat format = new DecimalFormat();
@@ -57,21 +29,21 @@ public class CreateAndLoad {
 		String query; 
 		timer = System.currentTimeMillis();
 		//DL
-		if(downloadLastDump) {
+		if(DOWNLOAD_LAST_DUMP) {
 			System.out.println("Downloading dump and converting it into CSV files (this may take a few minutes)... ");
-			DownloadAndConvert.downloadAndCSVConvert(TEMP_CSV_FOLDER_DEFAULT);
+			DownloadAndConvert.downloadAndCSVConvert(TEMP_CSV_FOLDER);
 		}else {
 			System.out.println("Skipping dump download...");			
 		}
 
 		//DROP DB
-		if(dropIfExist) {
+		if(DROP_IF_EXIST) {
 			System.out.print("Dropping previous database (if it exists)... ");
-			query = "\"DROP DATABASE IF EXISTS "+db+"\"";
+			query = "\"DROP DATABASE IF EXISTS "+DB+"\"";
 			if(hasPassword) {			
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "-e", query);
 			}else {
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-e", query);			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
 			}
 			try {			
 				//processBuilder.redirectError(new File("error.log"));
@@ -85,12 +57,12 @@ public class CreateAndLoad {
 
 
 		//CREATE DB
-		System.out.print("Creating if not exists db=\""+db+"\"... ");		
-		query = "\"CREATE DATABASE IF NOT EXISTS "+ db +" CHARACTER SET='utf8' COLLATE='utf8_bin';\"";		
+		System.out.print("Creating if not exists db=\""+DB+"\"... ");		
+		query = "\"CREATE DATABASE IF NOT EXISTS "+ DB +" CHARACTER SET='utf8' COLLATE='utf8_bin';\"";		
 		if(hasPassword) {			
-			processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "-e", query);
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "-e", query);
 		}else {
-			processBuilder = new ProcessBuilder("mysql", "-u", username, "-e", query);			
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
 		}
 		try {		
 			processBuilder.start().waitFor();					
@@ -101,14 +73,14 @@ public class CreateAndLoad {
 		System.out.println("done!");
 
 		//TABLES INITIALISATION 
-		File sqlFile = new File(initFilepath);
+		File sqlFile = new File(INIT_FILEPATH);
 		if(sqlFile.exists()) {
 			System.out.print("Tables initialisation from file \""+sqlFile.getName()+"\"... ");
 			query = "source "+sqlFile.getAbsolutePath();
 			if(hasPassword) {
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, DB, "-e", query);
 			}else {
-				processBuilder = new ProcessBuilder("mysql", "-u", username, db, "-e", query);				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
 			}
 			try {
 				processBuilder.start().waitFor();					
@@ -125,18 +97,18 @@ public class CreateAndLoad {
 
 
 		System.out.print("\tnode_types... ");
-		sqlFile = new File(tempCSVFolder + File.separator + "nodeTypes.csv");
+		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "nodeTypes.csv");
 		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+tempCSVFolder + "/nodeTypes.csv"+"' " + 
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodeTypes.csv"+"' " + 
 					"into table node_types " + 
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
 					"(id,name,info);\"";		
-			if(password.isEmpty()){
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "--local-infile", db, "-e", query);
+			if(hasPassword){	
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
 			}else{
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "--local-infile", db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
 			try {
 				processBuilder.start().waitFor();					
@@ -149,18 +121,18 @@ public class CreateAndLoad {
 		}
 
 		System.out.print("\tedge_types... ");
-		sqlFile = new File(tempCSVFolder + File.separator + "relationTypes.csv");
+		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "relationTypes.csv");
 		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+tempCSVFolder + "/relationTypes.csv"+"' " + 
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relationTypes.csv"+"' " + 
 					"into table edge_types " + 
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
 					"(id,name,extendedName,info);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "--local-infile", db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
 			}else{			
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "--local-infile", db, "-e", query);				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
 			try {
 				processBuilder.start().waitFor();					
@@ -173,18 +145,18 @@ public class CreateAndLoad {
 		}
 
 		System.out.print("\tnodes (this may take a little while, maybe grab a coffee)... ");
-		sqlFile = new File(tempCSVFolder + File.separator + "nodes.csv");
+		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "nodes.csv");
 		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+tempCSVFolder + "/nodes.csv"+"' " + 
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodes.csv"+"' " + 
 					"into table nodes " + 
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
 					"(id,name,type,weight);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "--local-infile", db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
 			}else{			
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "--local-infile", db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);
 			}
 			try {
 				processBuilder.start().waitFor();					
@@ -197,18 +169,18 @@ public class CreateAndLoad {
 		}
 
 		System.out.print("\tedges (this may take a little while, grab a coffee or two)... ");
-		sqlFile = new File(tempCSVFolder + File.separator + "relations.csv");
+		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "relations.csv");
 		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+tempCSVFolder + "/relations.csv"+"' " + 
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations.csv"+"' " + 
 					"into table edges " + 
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
 					"(id,source,destination,type,weight);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "-p", password, "--local-infile", db, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
 			}else{				
-				processBuilder = new ProcessBuilder("mysql", "-u", username, "--local-infile", db, "-e", query);				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
 			try {
 				processBuilder.start().waitFor();					
@@ -221,9 +193,9 @@ public class CreateAndLoad {
 		}
 
 
-		if(cleanAfter) {
+		if(CLEAN_AFTER) {
 			System.out.print("Cleaning temporary files... ");
-			File tempFolder = new File(tempCSVFolder);
+			File tempFolder = new File(TEMP_CSV_FOLDER);
 			deleteTemporary(tempFolder);			
 			System.out.println("done!");
 		}
@@ -243,11 +215,89 @@ public class CreateAndLoad {
 		}
 	}	
 
-	private static void usage() {
-		System.out.println("Create and load rezoJDM. 3 parameters (in that order): ");
-		System.out.println("1st parameter: Name of database (DEFAULT=\""+DB_DEFAULT+"\"");
-		System.out.println("2nd parameter: username (DEFAULT=\""+USERNAME_DEFAULT+"\"");
-		System.out.println("1st parameter: password (DEFAULT=\""+PASSWORD_DEFAULT+"\"");
+
+	public static void argsProcess(String[] args) {
+		int index = 0;
+		int length = args.length;
+		String arg;
+
+		while(index < length) {
+			arg = args[index++].toLowerCase();
+			if(arg.equals("-h") || arg.equals("--help")) {
+				usage();
+			}
+			else if(arg.equals("-d") || arg.equals("--database")) {
+				if(index < length) {
+					DB = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+DB+")");
+				}
+			}
+			else if(arg.equals("-u") || arg.equals("--username")) {
+				if(index < length) {
+					USERNAME = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+USERNAME+")");
+				}
+			}
+			else if(arg.equals("-p") || arg.equals("--password")) {
+				if(index < length) {
+					PASSWORD = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+PASSWORD+")");
+				}
+			}
+			else if(arg.equals("-i") || arg.equals("--init")) {
+				if(index < length) {
+					INIT_FILEPATH = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+INIT_FILEPATH+")");
+				}
+			}
+			else if(arg.equals("-t") || arg.equals("--temp")) {
+				if(index < length) {
+					TEMP_CSV_FOLDER = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+TEMP_CSV_FOLDER+")");
+				}
+			}
+			//FLAGS
+			else if(arg.equals("--no-download")) {
+				DOWNLOAD_LAST_DUMP = false;
+			}else if(arg.equals("--drop")) {
+				DROP_IF_EXIST = true;
+			}else if(arg.equals("--keep")) {
+				CLEAN_AFTER = false;
+			}
+		}
+
+	}
+
+	
+	private static void usage() {	
+		System.out.println("MySQL Import tool for rezoJDM. "
+				+ "The program will fetch the last avalaible dump (in zip format, 1+GB) from jeuxdemots "
+				+ "(http://www.jeuxdemots.org/JDM-LEXICALNET-FR/) "
+				+ "and import it into a new MySQL database.");
+		System.out.println("MySQL must be installed and added to the system PATH variable.");
+		
+		System.out.println("There is no mandatory argument but you might need (or just want) to set some of them.");		
+		System.out.println();
+		System.out.println("MySQL related parameters");
+		System.out.println("\t-d/--database [DATABASE_NAME]: Database name (DEFAULT=\""+DB+"\"");
+		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\"");
+		System.out.println("\t-p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT=\""+PASSWORD+"\"");
+		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\"");
+		System.out.println("\t--drop: Drop previous database with the same name (DEFAULT=\""+String.valueOf(DROP_IF_EXIST)+"\")");
+		System.out.println();
+		System.out.println("Other parameters: ");
+		System.out.println("\t-i/--init [INIT_FILEPATH]: Filepath of the sql init file (DEFAULT=\""+INIT_FILEPATH+"\"");
+		System.out.println("\t-t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT=\""+TEMP_CSV_FOLDER+"\"");
+		System.out.println("\t--keep: Do not delete the temporary folder and all its content before exiting "
+				+ "(DEFAULT=\""+String.valueOf(!CLEAN_AFTER)+"\")");
+		System.out.println("\t--no-download: Do not attempt to download the lastest dump and instead "
+				+ "try to read existing file from the temporary folder (DEFAULT=\""+String.valueOf(!DOWNLOAD_LAST_DUMP)+"\")");
+				
 		System.exit(1);
 	}
 }
