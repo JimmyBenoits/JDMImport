@@ -41,7 +41,7 @@ public class CreateAndLoad {
 			System.out.print("Dropping previous database (if it exists)... ");
 			query = "\"DROP DATABASE IF EXISTS "+DB+"\"";
 			if(hasPassword) {			
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "-e", query);
 			}else {
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
 			}
@@ -60,7 +60,7 @@ public class CreateAndLoad {
 		System.out.print("Creating if not exists db=\""+DB+"\"... ");		
 		query = "\"CREATE DATABASE IF NOT EXISTS "+ DB +" CHARACTER SET='utf8' COLLATE='utf8_bin';\"";		
 		if(hasPassword) {			
-			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "-e", query);
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "-e", query);
 		}else {
 			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
 		}
@@ -78,7 +78,7 @@ public class CreateAndLoad {
 			System.out.print("Tables initialisation from file \""+sqlFile.getName()+"\"... ");
 			query = "source "+sqlFile.getAbsolutePath();
 			if(hasPassword) {
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, DB, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, DB, "-e", query);
 			}else {
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
 			}
@@ -106,7 +106,7 @@ public class CreateAndLoad {
 					"IGNORE 1 LINES " +
 					"(id,name,info);\"";		
 			if(hasPassword){	
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "--local-infile", DB, "-e", query);
 			}else{
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
@@ -130,7 +130,7 @@ public class CreateAndLoad {
 					"IGNORE 1 LINES " +
 					"(id,name,extendedName,info);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "--local-infile", DB, "-e", query);
 			}else{			
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
@@ -154,7 +154,7 @@ public class CreateAndLoad {
 					"IGNORE 1 LINES " +
 					"(id,name,type,weight);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "--local-infile", DB, "-e", query);
 			}else{			
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);
 			}
@@ -178,7 +178,7 @@ public class CreateAndLoad {
 					"IGNORE 1 LINES " +
 					"(id,source,destination,type,weight);\"";		
 			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p", PASSWORD, "--local-infile", DB, "-e", query);
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p"+PASSWORD, "--local-infile", DB, "-e", query);
 			}else{				
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
