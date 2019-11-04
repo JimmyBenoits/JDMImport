@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
 public class DownloadAndConvert {
@@ -66,8 +67,10 @@ public class DownloadAndConvert {
 		long timer = System.currentTimeMillis();			
 		boolean res = false;
 		File outputDir, csvFile, zipFile;
-		String dumppath;
+		String dumppath, basepathCsvFile;
 		Set<Integer> nodeIDs;
+		int part;
+		BufferedWriter fragmentedOutput;
 		Integer id, idSource, idDestination;
 		try {
 			URL url = new URL(REZO_BASE_URL + LAST_OUTPUT_NOHTML);
@@ -143,62 +146,129 @@ public class DownloadAndConvert {
 						}
 					}	
 
-					//nodes
+					//nodes					
 					nodeIDs = new HashSet<>();
-					csvFile = new File(outputDirpath + File.separator + "nodes.csv");
-					System.out.println("\t**Reading nodes and converting into \""+csvFile.getName()+"\"**");
+					basepathCsvFile = outputDirpath + File.separator + "nodes_";
+					part = 1;
 					cpt = 0;
-					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
-						out.write("id|name|type|weight");
-						out.newLine();
-						while((line = in.readLine())!=null && !line.startsWith("// -- RELATIONS")) {
-							matcher = nodePattern.matcher(line);
-							if(matcher.matches()) {
-								id = Integer.parseInt(matcher.group(1));
-								nodeIDs.add(id);
-								out.write(matcher.group(1)+"|"+
-										matcher.group(2)+"|"+
-										matcher.group(3)+"|"+
-										matcher.group(4)+"|");
-								out.newLine();
-							}
-							++cpt;
-							if(cpt % 1_000_000 == 0) {
-								System.out.println("\t\t"+format.format(cpt)+" nodes...");
-							}
+					csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+					fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8)); 
+//					csvFile = new File(outputDirpath + File.separator + "nodes.csv");
+					System.out.println("\t**Reading nodes and converting into \""+csvFile.getName()+"\"**");
+					fragmentedOutput.write("id|name|type|weight");
+					fragmentedOutput.newLine();
+					while((line = in.readLine())!=null && !line.startsWith("// -- RELATIONS")) {						
+						matcher = nodePattern.matcher(line);
+						if(matcher.matches()) {
+							id = Integer.parseInt(matcher.group(1));
+							nodeIDs.add(id);
+							fragmentedOutput.write(matcher.group(1)+"|"+
+									matcher.group(2)+"|"+
+									matcher.group(3)+"|"+
+									matcher.group(4)+"|");
+							fragmentedOutput.newLine();
+						}
+						++cpt;
+						if(cpt % 10_000_000 == 0) {
+							System.out.println("\t\t"+format.format(cpt)+" nodes...");
+							fragmentedOutput.close();
+							++part;
+							csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+							fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
 						}
 					}
+					System.out.println("\t\t"+format.format(cpt)+" nodes...");
+					fragmentedOutput.close();					
+					
+					
+//					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
+//						out.write("id|name|type|weight");
+//						out.newLine();
+//						while((line = in.readLine())!=null && !line.startsWith("// -- RELATIONS")) {
+//							matcher = nodePattern.matcher(line);
+//							if(matcher.matches()) {
+//								id = Integer.parseInt(matcher.group(1));
+//								nodeIDs.add(id);
+//								out.write(matcher.group(1)+"|"+
+//										matcher.group(2)+"|"+
+//										matcher.group(3)+"|"+
+//										matcher.group(4)+"|");
+//								out.newLine();
+//							}
+//							++cpt;
+//							if(cpt % 1_000_000 == 0) {
+//								System.out.println("\t\t"+format.format(cpt)+" nodes...");
+//							}
+//						}
+//					}
 
 					//relations
-					csvFile = new File(outputDirpath + File.separator + "relations.csv");
-					System.out.println("\t**Reading relations and converting into \""+csvFile.getName()+"\"**");
+					basepathCsvFile = outputDirpath + File.separator + "relations_";
+					part = 1;
 					cpt = 0;
-					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
-						out.write("id|source|destination|type|weight");
-						out.newLine();
-						while(((line = in.readLine())!=null)) {
-							matcher = relationPattern.matcher(line);
-							if(matcher.matches()) {
-								idSource = Integer.parseInt(matcher.group(2));
-								if(nodeIDs.contains(idSource)) {
-									idDestination = Integer.parseInt(matcher.group(3));
-									if(nodeIDs.contains(idDestination)) {
-										out.write(matcher.group(1)+"|"+
-												matcher.group(2)+"|"+
-												matcher.group(3)+"|"+
-												matcher.group(4)+"|"+
-												matcher.group(5));
-										out.newLine();
-									}
+					csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+					fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
+//					csvFile = new File(outputDirpath + File.separator + "relations.csv");
+					System.out.println("\t**Reading relations and converting into \""+csvFile.getName()+"\"**");		
+					fragmentedOutput.write("id|source|destination|type|weight");
+					fragmentedOutput.newLine();
+					while(((line = in.readLine())!=null)) {
+						matcher = relationPattern.matcher(line);
+						if(matcher.matches()) {
+							idSource = Integer.parseInt(matcher.group(2));
+							if(nodeIDs.contains(idSource)) {
+								idDestination = Integer.parseInt(matcher.group(3));
+								if(nodeIDs.contains(idDestination)) {
+									fragmentedOutput.write(matcher.group(1)+"|"+
+											matcher.group(2)+"|"+
+											matcher.group(3)+"|"+
+											matcher.group(4)+"|"+
+											matcher.group(5));
+									fragmentedOutput.newLine();
 								}
-							}							
-							++cpt;
-							if(cpt % 1_000_000 == 0) {
-								System.out.println("\t\t"+format.format(cpt)+" relations...");
 							}
+						}							
+						++cpt;
+						if(cpt % 10_000_000 == 0) {							
+							fragmentedOutput.close();
+							++part;
+							csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+							fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
+							System.out.println("\t\t"+format.format(cpt)+" relations...");
 						}
-						res = true;
-					}									
+					}
+					System.out.println("\t\t"+format.format(cpt)+" relations...");
+					fragmentedOutput.close();
+					res = true;
+					
+					
+					
+//					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
+//						out.write("id|source|destination|type|weight");
+//						out.newLine();
+//						while(((line = in.readLine())!=null)) {
+//							matcher = relationPattern.matcher(line);
+//							if(matcher.matches()) {
+//								idSource = Integer.parseInt(matcher.group(2));
+//								if(nodeIDs.contains(idSource)) {
+//									idDestination = Integer.parseInt(matcher.group(3));
+//									if(nodeIDs.contains(idDestination)) {
+//										out.write(matcher.group(1)+"|"+
+//												matcher.group(2)+"|"+
+//												matcher.group(3)+"|"+
+//												matcher.group(4)+"|"+
+//												matcher.group(5));
+//										out.newLine();
+//									}
+//								}
+//							}							
+//							++cpt;
+//							if(cpt % 1_000_000 == 0) {
+//								System.out.println("\t\t"+format.format(cpt)+" relations...");
+//							}
+//						}
+//						res = true;
+//					}									
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -228,7 +298,7 @@ public class DownloadAndConvert {
 			while (zipEntry != null) {				
 				newFile = new File(destinationFolder + File.separator + zipEntry);
 				try(FileOutputStream fos = new FileOutputStream(newFile)){
-					while ((len = zis.read(buffer)) > 0) {
+					while ((len = zis.read(buffer)) >= 0) {
 						fos.write(buffer, 0, len);
 					}
 				}
@@ -237,7 +307,10 @@ public class DownloadAndConvert {
 			zis.closeEntry();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
+		} catch(ZipException e) {
+			System.err.println("Kown exception: \""+e.getMessage()+"\". It should not interfere with the rest of the program.");
+		} 
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

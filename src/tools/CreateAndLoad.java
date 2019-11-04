@@ -26,7 +26,8 @@ public class CreateAndLoad {
 		long timer;
 		DecimalFormat format = new DecimalFormat();
 		ProcessBuilder processBuilder;
-		String query; 
+		String query, basepathCsvFile;
+		int part;
 		timer = System.currentTimeMillis();
 		//DL
 		if(DOWNLOAD_LAST_DUMP) {
@@ -65,8 +66,8 @@ public class CreateAndLoad {
 			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
 		}
 		try {	
-			processBuilder.redirectError(new File("error.log"));
-			processBuilder.redirectOutput(new File("output.log"));
+			//			processBuilder.redirectError(new File("error.log"));
+			//			processBuilder.redirectOutput(new File("output.log"));
 			System.out.println(processBuilder.command().toString());
 			processBuilder.start().waitFor();					
 		} catch (IOException | InterruptedException e) {
@@ -147,15 +148,21 @@ public class CreateAndLoad {
 			System.out.println("Skipped edge_types import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
 		}
 
-		System.out.print("\tnodes (this may take a little while, maybe grab a coffee)... ");
-		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "nodes.csv");
-		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodes.csv"+"' " + 
+		System.out.println("\tnodes (this may take a little while, maybe grab a coffee)... ");
+		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
+		part = 1;	
+		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		if(!sqlFile.exists()) {
+			System.out.println("Skipped nodes import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+		}
+		while(sqlFile.exists()) {
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodes_"+String.valueOf(part)+".csv"+"' " + 
 					"into table nodes " + 
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
 					"(id,name,type,weight);\"";		
+			System.out.print("\tpart#"+part+"... ");
 			if(hasPassword){				
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
 			}else{			
@@ -166,15 +173,23 @@ public class CreateAndLoad {
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
-			System.out.println("done!");
-		}else {
-			System.out.println("Skipped nodes import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+			System.out.println("done.");
+			++part;
+			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 		}
 
-		System.out.print("\tedges (this may take a little while, grab a coffee or two)... ");
-		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "relations.csv");
-		if(sqlFile.exists()) {			
-			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations.csv"+"' " + 
+
+		System.out.println("\tedges (this may take a little while, grab a coffee or two)... ");
+		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "relations_";
+		part = 1;	
+		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		if(!sqlFile.exists()) {
+			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+		}
+
+		while(sqlFile.exists()) {
+			System.out.print("\tpart#"+part+"... ");
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations_"+String.valueOf(part)+".csv"+"' " + 
 					"into table edges " + 
 					"fields " +
 					"terminated by '|' " +					
@@ -186,14 +201,42 @@ public class CreateAndLoad {
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
 			}
 			try {
+//				processBuilder.redirectError(new File("error_"+String.valueOf(part)+".log"));
+//				processBuilder.redirectOutput(new File("output_"+String.valueOf(part)+".log"));
 				processBuilder.start().waitFor();					
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
-			System.out.println("done!");
-		}else {
-			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+			System.out.println("done.");
+			++part;
+			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 		}
+
+//
+//		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "relations.csv");
+//		if(sqlFile.exists()) {			
+//			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations.csv"+"' " + 
+//					"into table edges " + 
+//					"fields " +
+//					"terminated by '|' " +					
+//					"IGNORE 1 LINES " +
+//					"(id,source,destination,type,weight);\"";		
+//			if(hasPassword){				
+//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
+//			}else{				
+//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
+//			}
+//			try {
+//				processBuilder.redirectError(new File("error.log"));
+//				processBuilder.redirectOutput(new File("output.log"));
+//				processBuilder.start().waitFor();					
+//			} catch (IOException | InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//			System.out.println("done!");
+//		}else {
+//			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+//		}
 
 
 		if(CLEAN_AFTER) {
@@ -276,14 +319,14 @@ public class CreateAndLoad {
 
 	}
 
-	
+
 	private static void usage() {	
 		System.out.println("MySQL Import tool for rezoJDM. "
 				+ "The program will fetch the last avalaible dump (in zip format, 1+GB) from jeuxdemots "
 				+ "(http://www.jeuxdemots.org/JDM-LEXICALNET-FR/) "
 				+ "and import it into a new MySQL database.");
 		System.out.println("MySQL must be installed and added to the system PATH variable.");
-		
+
 		System.out.println("There is no mandatory argument but you might need (or just want) to set some of them.");		
 		System.out.println();
 		System.out.println("MySQL related parameters");
@@ -300,7 +343,7 @@ public class CreateAndLoad {
 				+ "(DEFAULT=\""+String.valueOf(!CLEAN_AFTER)+"\")");
 		System.out.println("\t--no-download: Do not attempt to download the lastest dump and instead "
 				+ "try to read existing file from the temporary folder (DEFAULT=\""+String.valueOf(!DOWNLOAD_LAST_DUMP)+"\")");
-				
+
 		System.exit(1);
 	}
 }
