@@ -82,7 +82,7 @@ public class CreateAndLoad {
 		File sqlFile = new File(INIT_FILEPATH);
 		if(sqlFile.exists()) {
 			System.out.print("Tables initialisation from file \""+sqlFile.getName()+"\"... ");
-			query = "source "+sqlFile.getAbsolutePath();
+			query = "\"source "+sqlFile.getAbsolutePath()+"\"";
 			if(hasPassword) {
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
 			}else {
@@ -98,10 +98,25 @@ public class CreateAndLoad {
 		}else {
 			System.out.println("Skipped Table initialisation because \""+sqlFile.getAbsolutePath()+"\" is missing...");
 		}
-
+	
+	
 		System.out.println("Importing data: ");
-
-
+		//Remove foreign key checks
+		System.out.print("Removing foreign key checks to speed up the process... ");
+		query = "\"SET foreign_key_checks = 0\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+		
 		System.out.print("\tnode_types... ");
 		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "nodeTypes.csv");
 		if(sqlFile.exists()) {			
@@ -230,6 +245,23 @@ public class CreateAndLoad {
 			++part;
 			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 		}
+		
+		//Add foreign key checks
+		System.out.print("Adding foreign key checks... ");
+		query = "\"SET foreign_key_checks = 1\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+		
 
 		if(CLEAN_AFTER) {
 			System.out.print("Cleaning temporary files... ");			
