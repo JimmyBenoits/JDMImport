@@ -2,6 +2,9 @@ MySQL Import tool for rezoJDM.
 
 The program will fetch the last avalaible dump (in zip format, 1+GB) from jeuxdemots (http://www.jeuxdemots.org/JDM-LEXICALNET-FR/) and import it into a new MySQL database.
 
+**Be careful, as of November 2019, the dump is a 13GB file and you will need around twice (thrice if you want to keep intermediate files) as much for the program to function correctly.**
+
+
 **MySQL must be installed and added to the system PATH variable.**
 
 You might want to modify your configuration file ("my.ini", probably in C:\ProgramData\MySQL\MySQL Server [VERSION]\my.ini") and increase both "innodb_buffer_pool_size" and "innodb_log_file_size".
