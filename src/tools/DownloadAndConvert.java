@@ -25,9 +25,14 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 
 public class DownloadAndConvert {
+	
+	private static final String DEFAULT_FOLDER = "__tmpRezoJDMCSV";
+	private static final boolean DEFAULT_CLEAN_INTERMEDIARY_FILES = false;
+	private static final int DEFAULT_PART_SIZE = 100_000;
+	
 
 	public static void main(String[] args) throws IOException {
-		downloadAndCSVConvert("__tmpRezoJDMCSV", false);
+		downloadAndCSVConvert(DEFAULT_FOLDER, DEFAULT_CLEAN_INTERMEDIARY_FILES, DEFAULT_PART_SIZE);
 	}
 
 	/**
@@ -62,7 +67,7 @@ public class DownloadAndConvert {
 					+ "w=(\\d+)$");	
 
 
-	public static boolean downloadAndCSVConvert(String outputDirpath, boolean cleanIntermediateFiles) {	
+	public static boolean downloadAndCSVConvert(String outputDirpath, boolean cleanIntermediateFiles, int partSize) {	
 		Matcher matcher;
 		long timer = System.currentTimeMillis();			
 		boolean res = false;
@@ -72,6 +77,9 @@ public class DownloadAndConvert {
 		int part;
 		BufferedWriter fragmentedOutput;
 		Integer id, idSource, idDestination;
+		if(partSize <= 0) {
+			partSize = Integer.MAX_VALUE;
+		}
 		try {
 			URL url = new URL(REZO_BASE_URL + LAST_OUTPUT_NOHTML);
 			String line = null;			
@@ -173,7 +181,7 @@ public class DownloadAndConvert {
 							fragmentedOutput.newLine();
 						}
 						++cpt;
-						if(cpt % 10_000_000 == 0) {
+						if(cpt % partSize == 0) {
 							System.out.println("\t\t"+format.format(cpt)+" nodes...");
 							fragmentedOutput.close();
 							++part;
@@ -212,7 +220,7 @@ public class DownloadAndConvert {
 							}
 						}							
 						++cpt;
-						if(cpt % 10_000_000 == 0) {							
+						if(cpt % partSize == 0) {							
 							fragmentedOutput.close();
 							++part;
 							csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
