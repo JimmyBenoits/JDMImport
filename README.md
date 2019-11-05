@@ -24,3 +24,7 @@ There is no mandatory argument but you might need (or just want) to set some of 
  *       -t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT="__tmpRezoJDMCSV")
  *       --keep: Do not delete the temporary folder and all its content before exiting (DEFAULT="false")
  *       --no-download: Do not attempt to download the lastest dump and instead try to read existing file from the temporary folder (DEFAULT="false")
+ *       -s/--size [PARTITION_SIZE]: Number of elements in each subfiles use to import nodes and edges.
+        A powerfull machine might not need to split the csv files but in most cases, the entire dump cannot be imported all at once.
+        Be careful as using a value too low might create a lot of files.
+        Use 0 to not split any files (DEFAULT=100000)
