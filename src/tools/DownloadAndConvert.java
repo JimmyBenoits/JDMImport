@@ -27,7 +27,7 @@ import java.util.zip.ZipInputStream;
 public class DownloadAndConvert {
 
 	public static void main(String[] args) throws IOException {
-		downloadAndCSVConvert("__tmpRezoJDMCSV");
+		downloadAndCSVConvert("__tmpRezoJDMCSV", false);
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class DownloadAndConvert {
 					+ "w=(\\d+)$");	
 
 
-	public static boolean downloadAndCSVConvert(String outputDirpath) {	
+	public static boolean downloadAndCSVConvert(String outputDirpath, boolean cleanIntermediateFiles) {	
 		Matcher matcher;
 		long timer = System.currentTimeMillis();			
 		boolean res = false;
@@ -90,20 +90,24 @@ public class DownloadAndConvert {
 				}
 
 				url = new URL(REZO_BASE_URL + line + ".zip");
-				System.out.println("\t**Downloading \""+REZO_BASE_URL + line + ".zip\"**");
 				dumppath = outputDirpath + File.separator + "lastdump.zip";
 				zipFile = new File(dumppath);
-				if(zipFile.exists()) {
-					zipFile.delete();
-				}
-				try {
-					Files.copy(url.openStream(),Paths.get(dumppath));
-				} catch (IOException e) {
-					e.printStackTrace();
-					return false;
+				if(!zipFile.exists()) {
+					System.out.println("\t**Downloading \""+REZO_BASE_URL + line + ".zip\"**");											
+					try {
+						Files.copy(url.openStream(),Paths.get(dumppath));
+					} catch (IOException e) {
+						e.printStackTrace();
+						return false;
+					}
+				}else {
+					System.out.println("\t**\""+REZO_BASE_URL + line + ".zip\" already exists**");											
 				}
 				System.out.println("\t**Unzipping...**");
 				unzip(dumppath, outputDirpath);
+				if(cleanIntermediateFiles) {
+					zipFile.delete();
+				}
 
 				try(BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(outputDirpath + File.separator + line), "cp1252"))){	
 					//header
@@ -153,7 +157,7 @@ public class DownloadAndConvert {
 					cpt = 0;
 					csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 					fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8)); 
-//					csvFile = new File(outputDirpath + File.separator + "nodes.csv");
+					//					csvFile = new File(outputDirpath + File.separator + "nodes.csv");
 					System.out.println("\t**Reading nodes and converting into \""+csvFile.getName()+"\"**");
 					fragmentedOutput.write("id|name|type|weight");
 					fragmentedOutput.newLine();
@@ -179,28 +183,7 @@ public class DownloadAndConvert {
 					}
 					System.out.println("\t\t"+format.format(cpt)+" nodes...");
 					fragmentedOutput.close();					
-					
-					
-//					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
-//						out.write("id|name|type|weight");
-//						out.newLine();
-//						while((line = in.readLine())!=null && !line.startsWith("// -- RELATIONS")) {
-//							matcher = nodePattern.matcher(line);
-//							if(matcher.matches()) {
-//								id = Integer.parseInt(matcher.group(1));
-//								nodeIDs.add(id);
-//								out.write(matcher.group(1)+"|"+
-//										matcher.group(2)+"|"+
-//										matcher.group(3)+"|"+
-//										matcher.group(4)+"|");
-//								out.newLine();
-//							}
-//							++cpt;
-//							if(cpt % 1_000_000 == 0) {
-//								System.out.println("\t\t"+format.format(cpt)+" nodes...");
-//							}
-//						}
-//					}
+
 
 					//relations
 					basepathCsvFile = outputDirpath + File.separator + "relations_";
@@ -208,7 +191,7 @@ public class DownloadAndConvert {
 					cpt = 0;
 					csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 					fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
-//					csvFile = new File(outputDirpath + File.separator + "relations.csv");
+					//					csvFile = new File(outputDirpath + File.separator + "relations.csv");
 					System.out.println("\t**Reading relations and converting into \""+csvFile.getName()+"\"**");		
 					fragmentedOutput.write("id|source|destination|type|weight");
 					fragmentedOutput.newLine();
@@ -239,36 +222,8 @@ public class DownloadAndConvert {
 					}
 					System.out.println("\t\t"+format.format(cpt)+" relations...");
 					fragmentedOutput.close();
-					res = true;
-					
-					
-					
-//					try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
-//						out.write("id|source|destination|type|weight");
-//						out.newLine();
-//						while(((line = in.readLine())!=null)) {
-//							matcher = relationPattern.matcher(line);
-//							if(matcher.matches()) {
-//								idSource = Integer.parseInt(matcher.group(2));
-//								if(nodeIDs.contains(idSource)) {
-//									idDestination = Integer.parseInt(matcher.group(3));
-//									if(nodeIDs.contains(idDestination)) {
-//										out.write(matcher.group(1)+"|"+
-//												matcher.group(2)+"|"+
-//												matcher.group(3)+"|"+
-//												matcher.group(4)+"|"+
-//												matcher.group(5));
-//										out.newLine();
-//									}
-//								}
-//							}							
-//							++cpt;
-//							if(cpt % 1_000_000 == 0) {
-//								System.out.println("\t\t"+format.format(cpt)+" relations...");
-//							}
-//						}
-//						res = true;
-//					}									
+					res = true;					
+
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -278,10 +233,15 @@ public class DownloadAndConvert {
 		} catch (MalformedURLException e) {						
 			e.printStackTrace();
 		}
+		if(cleanIntermediateFiles) {
+			outputDir = new File(outputDirpath + File.separator + "JDM-LEXICALNET-FR");
+			CreateAndLoad.deleteTemporary(outputDir);			
+		}
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("\t**Download done in: "+format.format((timer / 1_000))+" sec.**");
 		return res;
 	}
+
 
 	public static void unzip(String zipFilepath, String destinationFolder)	{ 		
 		byte[] buffer = new byte[1024];
@@ -314,4 +274,5 @@ public class DownloadAndConvert {
 			e.printStackTrace();
 		}
 	}
+	
 }

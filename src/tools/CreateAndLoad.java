@@ -32,7 +32,7 @@ public class CreateAndLoad {
 		//DL
 		if(DOWNLOAD_LAST_DUMP) {
 			System.out.println("Downloading dump and converting it into CSV files (this may take a few minutes)... ");
-			DownloadAndConvert.downloadAndCSVConvert(TEMP_CSV_FOLDER);
+			DownloadAndConvert.downloadAndCSVConvert(TEMP_CSV_FOLDER, CLEAN_AFTER);
 		}else {
 			System.out.println("Skipping dump download...");			
 		}
@@ -212,33 +212,6 @@ public class CreateAndLoad {
 			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 		}
 
-//
-//		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "relations.csv");
-//		if(sqlFile.exists()) {			
-//			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations.csv"+"' " + 
-//					"into table edges " + 
-//					"fields " +
-//					"terminated by '|' " +					
-//					"IGNORE 1 LINES " +
-//					"(id,source,destination,type,weight);\"";		
-//			if(hasPassword){				
-//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
-//			}else{				
-//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
-//			}
-//			try {
-//				processBuilder.redirectError(new File("error.log"));
-//				processBuilder.redirectOutput(new File("output.log"));
-//				processBuilder.start().waitFor();					
-//			} catch (IOException | InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//			System.out.println("done!");
-//		}else {
-//			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
-//		}
-
-
 		if(CLEAN_AFTER) {
 			System.out.print("Cleaning temporary files... ");
 			File tempFolder = new File(TEMP_CSV_FOLDER);
@@ -250,7 +223,7 @@ public class CreateAndLoad {
 		System.out.println("Finished in "+format.format(timer / 1_000)+ " sec.");
 	}
 
-	private static void deleteTemporary(File temporary) {
+	public static void deleteTemporary(File temporary) {
 		if(temporary.isFile()) {
 			temporary.delete();
 		}else {
