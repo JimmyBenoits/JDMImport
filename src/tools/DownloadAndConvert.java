@@ -177,7 +177,7 @@ public class DownloadAndConvert {
 							fragmentedOutput.write(matcher.group(1)+"|"+
 									matcher.group(2)+"|"+
 									matcher.group(3)+"|"+
-									matcher.group(4)+"|");
+									matcher.group(4));
 							fragmentedOutput.newLine();
 						}
 						++cpt;
@@ -187,6 +187,8 @@ public class DownloadAndConvert {
 							++part;
 							csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 							fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
+							fragmentedOutput.write("id|name|type|weight");
+							fragmentedOutput.newLine();
 						}
 					}
 					System.out.println("\t\t"+format.format(cpt)+" nodes...");
@@ -199,10 +201,10 @@ public class DownloadAndConvert {
 					cpt = 0;
 					csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 					fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
-					//					csvFile = new File(outputDirpath + File.separator + "relations.csv");
-					System.out.println("\t**Reading relations and converting into \""+csvFile.getName()+"\"**");		
 					fragmentedOutput.write("id|source|destination|type|weight");
 					fragmentedOutput.newLine();
+					//					csvFile = new File(outputDirpath + File.separator + "relations.csv");
+					System.out.println("\t**Reading relations and converting into \""+csvFile.getName()+"\"**");		
 					while(((line = in.readLine())!=null)) {
 						matcher = relationPattern.matcher(line);
 						if(matcher.matches()) {
@@ -225,6 +227,8 @@ public class DownloadAndConvert {
 							++part;
 							csvFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 							fragmentedOutput = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8));
+							fragmentedOutput.write("id|source|destination|type|weight");
+							fragmentedOutput.newLine();
 							System.out.println("\t\t"+format.format(cpt)+" relations...");
 						}
 					}

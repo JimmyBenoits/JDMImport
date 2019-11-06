@@ -42,7 +42,7 @@ public class CreateAndLoad {
 		//DROP DB
 		if(DROP_IF_EXIST) {
 			System.out.print("Dropping previous database (if it exists)... ");
-			query = "\"DROP DATABASE IF EXISTS "+DB+"\"";
+			query = "\"DROP DATABASE IF EXISTS "+DB+";\"";
 			if(hasPassword) {			
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
 			}else {
@@ -70,14 +70,13 @@ public class CreateAndLoad {
 		try {	
 			//			processBuilder.redirectError(new File("error.log"));
 			//			processBuilder.redirectOutput(new File("output.log"));
-			System.out.println(processBuilder.command().toString());
+			//			System.out.println(processBuilder.command().toString());
 			processBuilder.start().waitFor();					
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 		System.out.println("done!");
-
 		//TABLES INITIALISATION 
 		File sqlFile = new File(INIT_FILEPATH);
 		if(sqlFile.exists()) {
@@ -98,12 +97,14 @@ public class CreateAndLoad {
 		}else {
 			System.out.println("Skipped Table initialisation because \""+sqlFile.getAbsolutePath()+"\" is missing...");
 		}
-	
-	
+
+
 		System.out.println("Importing data: ");
-		//Remove foreign key checks
-		System.out.print("Removing foreign key checks to speed up the process... ");
-		query = "\"SET foreign_key_checks = 0\"";
+
+		//Add autocommit
+//		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
+		System.out.print("\tRemoving autocommit to speed up the process... ");
+		query = "\"SET GLOBAL AUTOCOMMIT = 0;\"";
 		if(hasPassword) {
 			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
 		}else {
@@ -117,6 +118,38 @@ public class CreateAndLoad {
 		}
 		System.out.println("done!");
 		
+		//Remove foreign key checks
+		System.out.print("\tRemoving foreign key checks to speed up the process... ");
+		query = "\"SET GLOBAL foreign_key_checks = 0;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+		
+		//Remove unique checks
+		System.out.print("\tRemoving unique checks to speed up the process... ");
+		query = "\"SET GLOBAL unique_checks = 0;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+
 		System.out.print("\tnode_types... ");
 		sqlFile = new File(TEMP_CSV_FOLDER + File.separator + "nodeTypes.csv");
 		if(sqlFile.exists()) {			
@@ -125,7 +158,7 @@ public class CreateAndLoad {
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
-					"(id,name,info);\"";		
+					"(id,name,info)\"";		
 			if(hasPassword){	
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
 			}else{
@@ -149,7 +182,7 @@ public class CreateAndLoad {
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
-					"(id,name,extendedName,info);\"";		
+					"(id,name,extendedName,info)\"";		
 			if(hasPassword){				
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
 			}else{			
@@ -176,79 +209,13 @@ public class CreateAndLoad {
 				++edgeParts;
 			}
 		}
-		
-		
+
+
 		System.out.println("\tnodes (this may take a little while, maybe grab a coffee)... ");
-		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
-		part = 1;	
-		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
-		if(!sqlFile.exists()) {
-			System.out.println("Skipped nodes import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
-		}
-		while(sqlFile.exists()) {
-			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodes_"+String.valueOf(part)+".csv"+"' " + 
-					"into table nodes " + 
-					"fields " +
-					"terminated by '|' " +					
-					"IGNORE 1 LINES " +
-					"(id,name,type,weight);\"";		
-			System.out.print("\tpart#"+part+"/"+nodeParts+"... ");
-			importTimer = System.nanoTime();
-			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
-			}else{			
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);
-			}
-			try {
-				processBuilder.start().waitFor();					
-			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
-			}
-			importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-			System.out.println("done in "+format.format(importTimer)+" ms.");
-			++part;
-			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
-		}
 
-
-		System.out.println("\tedges (this may take a little while, grab a coffee or two)... ");
-		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "relations_";
-		part = 1;	
-		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
-		if(!sqlFile.exists()) {
-			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
-		}
-
-		while(sqlFile.exists()) {
-			System.out.print("\tpart#"+part+"/"+edgeParts+"... ");
-			importTimer = System.nanoTime();
-			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations_"+String.valueOf(part)+".csv"+"' " + 
-					"into table edges " + 
-					"fields " +
-					"terminated by '|' " +					
-					"IGNORE 1 LINES " +
-					"(id,source,destination,type,weight);\"";		
-			if(hasPassword){				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
-			}else{				
-				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
-			}
-			try {
-//				processBuilder.redirectError(new File("error_"+String.valueOf(part)+".log"));
-//				processBuilder.redirectOutput(new File("output_"+String.valueOf(part)+".log"));
-				processBuilder.start().waitFor();					
-			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
-			}
-			importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-			System.out.println("done in "+format.format(importTimer)+" ms.");
-			++part;
-			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
-		}
-		
-		//Add foreign key checks
-		System.out.print("Adding foreign key checks... ");
-		query = "\"SET foreign_key_checks = 1\"";
+		//Remove index on nodes
+		System.out.print("\tRemoving node index to speed up the process... ");
+		query = "\"ALTER TABLE 'nodes' DISABLE KEYS;\"";
 		if(hasPassword) {
 			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
 		}else {
@@ -261,7 +228,182 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
+
+		//commit
+		commit(hasPassword);
+
+		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
+		part = 1;	
+		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		if(!sqlFile.exists()) {
+			System.out.println("Skipped nodes import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+		}
+		while(sqlFile.exists()) {
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/nodes_"+String.valueOf(part)+".csv"+"' " + 
+					"into table nodes " + 
+					"fields " +
+					"terminated by '|' " +					
+					"IGNORE 1 LINES " +
+					"(id,name,type,weight)\"";		
+			System.out.print("\t\tpart#"+part+"/"+nodeParts+"... ");
+			importTimer = System.nanoTime();
+			if(hasPassword){				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
+			}else{			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);
+			}
+			try {
+				processBuilder.start().waitFor();	
+				//commit
+				commit(hasPassword);
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+			importTimer = (System.nanoTime() - importTimer) / 1_000_000;
+			System.out.println("done in "+format.format(importTimer)+" ms.");
+			++part;
+			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		}
+
+
+		System.out.println("\tedges (this may take a little while, grab a coffee or two)... ");
+		//Remove index on edges
+		System.out.print("\tRemoving edge index to speed up the process... ");
+		query = "\"ALTER TABLE 'edges' DISABLE KEYS;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "relations_";
+		part = 1;	
+		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		if(!sqlFile.exists()) {
+			System.out.println("Skipped edges import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
+		}
+
+		while(sqlFile.exists()) {
+			System.out.print("\t\tpart#"+part+"/"+edgeParts+"... ");
+			importTimer = System.nanoTime();
+			query = "\"load data local infile '"+TEMP_CSV_FOLDER + "/relations_"+String.valueOf(part)+".csv"+"' " + 
+					"into table edges " + 
+					"fields " +
+					"terminated by '|' " +					
+					"IGNORE 1 LINES " +
+					"(id,source,destination,type,weight)\"";		
+			if(hasPassword){				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
+			}else{				
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "--local-infile", DB, "-e", query);				
+			}
+			try {
+				//				processBuilder.redirectError(new File("error_"+String.valueOf(part)+".log"));
+				//				processBuilder.redirectOutput(new File("output_"+String.valueOf(part)+".log"));
+				processBuilder.start().waitFor();	
+				//commit
+				commit(hasPassword);
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+			importTimer = (System.nanoTime() - importTimer) / 1_000_000;
+			System.out.println("done in "+format.format(importTimer)+" ms.");
+			++part;
+			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
+		}
 		
+		//Add autocommit
+		System.out.print("Adding autocommit... ");
+		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");	
+
+		//Add index on nodes
+		System.out.print("\tEnabling node index... ");
+		query = "\"ALTER TABLE 'nodes' ENABLE KEYS;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+
+		//Add index on nodes
+		System.out.print("\tEnable edge index (this could take some time)... ");
+		query = "\"ALTER TABLE 'edges' ENABLE KEYS;\"";
+		importTimer = System.nanoTime();
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {			
+			processBuilder.start().waitFor();
+
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		importTimer = (System.nanoTime() - importTimer) / 1_000_000;
+		System.out.println("done!");
+		
+		
+
+		
+		//Add unique checks
+		System.out.print("Adding unique checks... ");
+		query = "\"SET GLOBAL unique_checks = 1;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");		
+
+		//Add foreign key checks
+		System.out.print("Adding foreign key checks... ");
+		query = "\"SET GLOBAL foreign_key_checks = 1;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+
 
 		if(CLEAN_AFTER) {
 			System.out.print("Cleaning temporary files... ");			
@@ -271,6 +413,27 @@ public class CreateAndLoad {
 
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("Finished in "+format.format(timer / 1_000)+ " sec.");
+	}
+	
+	
+	public static void commit(boolean hasPassword) {
+		ProcessBuilder processBuilder;
+		//commit
+		System.out.print("\t\tCOMMIT... ");
+		String query = "\"COMMIT;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");	
+		
 	}
 
 	public static void deleteTemporary(File temporary) {
@@ -348,8 +511,8 @@ public class CreateAndLoad {
 		}
 
 	}
-	
-	
+
+
 
 
 	private static void usage() {			
