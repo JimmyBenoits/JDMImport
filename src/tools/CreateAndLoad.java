@@ -100,23 +100,6 @@ public class CreateAndLoad {
 
 
 		System.out.println("Importing data: ");
-
-		//Add autocommit
-//		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
-		System.out.print("\tRemoving autocommit to speed up the process... ");
-		query = "\"SET GLOBAL AUTOCOMMIT = 0;\"";
-		if(hasPassword) {
-			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		}else {
-			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		}
-		try {
-			processBuilder.start().waitFor();					
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-		System.out.println("done!");
 		
 		//Remove foreign key checks
 		System.out.print("\tRemoving foreign key checks to speed up the process... ");
@@ -198,6 +181,23 @@ public class CreateAndLoad {
 			System.out.println("Skipped edge_types import because \""+sqlFile.getAbsolutePath()+"\" is missing... maybe the download went wrong?");
 		}
 
+		//Add autocommit
+//		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
+		System.out.print("\tRemoving autocommit to speed up the process... ");
+		query = "\"SET GLOBAL AUTOCOMMIT = 0;\"";
+		if(hasPassword) {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		}
+		try {
+			processBuilder.start().waitFor();					
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		System.out.println("done!");
+		
 
 		//Count node and edge parts
 		tempFolder = new File(TEMP_CSV_FOLDER);
@@ -229,9 +229,6 @@ public class CreateAndLoad {
 		}
 		System.out.println("done!");
 
-		//commit
-		commit(hasPassword);
-
 		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
 		part = 1;	
 		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
@@ -244,7 +241,7 @@ public class CreateAndLoad {
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
-					"(id,name,type,weight)\"";		
+					"(id,name,type,weight);commit;\"";		
 			System.out.print("\t\tpart#"+part+"/"+nodeParts+"... ");
 			importTimer = System.nanoTime();
 			if(hasPassword){				
@@ -254,8 +251,6 @@ public class CreateAndLoad {
 			}
 			try {
 				processBuilder.start().waitFor();	
-				//commit
-				commit(hasPassword);
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -297,7 +292,7 @@ public class CreateAndLoad {
 					"fields " +
 					"terminated by '|' " +					
 					"IGNORE 1 LINES " +
-					"(id,source,destination,type,weight)\"";		
+					"(id,source,destination,type,weight);commit;\"";		
 			if(hasPassword){				
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "--local-infile", DB, "-e", query);
 			}else{				
@@ -307,8 +302,6 @@ public class CreateAndLoad {
 				//				processBuilder.redirectError(new File("error_"+String.valueOf(part)+".log"));
 				//				processBuilder.redirectOutput(new File("output_"+String.valueOf(part)+".log"));
 				processBuilder.start().waitFor();	
-				//commit
-				commit(hasPassword);
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -415,26 +408,6 @@ public class CreateAndLoad {
 		System.out.println("Finished in "+format.format(timer / 1_000)+ " sec.");
 	}
 	
-	
-	public static void commit(boolean hasPassword) {
-		ProcessBuilder processBuilder;
-		//commit
-		System.out.print("\t\tCOMMIT... ");
-		String query = "\"COMMIT;\"";
-		if(hasPassword) {
-			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		}else {
-			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		}
-		try {
-			processBuilder.start().waitFor();					
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-		System.out.println("done!");	
-		
-	}
 
 	public static void deleteTemporary(File temporary) {
 		if(temporary.isFile()) {
