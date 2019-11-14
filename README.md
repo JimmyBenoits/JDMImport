@@ -5,7 +5,7 @@ The program will fetch the last avalaible dump (in zip format, 1+GB) from jeuxde
 **Be careful, as of November 2019, the dump is a 13GB file and you will need around twice (thrice if you want to keep intermediate files) as much for the program to function correctly.**
 
 
-**MySQL must be installed and added to the system PATH variable. `local_infile` variable must be set on 1.**
+**MySQL must be installed and added to the system PATH variable.**
 
 You might want to modify your configuration file ("my.ini", probably in C:\ProgramData\MySQL\MySQL Server [VERSION]\my.ini") and increase both "innodb_buffer_pool_size" and "innodb_log_file_size".
 
@@ -16,7 +16,6 @@ There is no mandatory argument but you might need (or just want) to set some of 
 *        -d/--database [DATABASE_NAME]: Database name (DEFAULT="rezoJDM)"
 *        -u/--username [USERNAME]: MySQL username (DEFAULT="root")
 *       -p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT="")
-*        -u/--username [USERNAME]: MySQL username (DEFAULT="root")
 *       --drop: Drop previous database with the same name (DEFAULT="false")
 
 **Other parameters:**
