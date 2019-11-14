@@ -1,6 +1,8 @@
 package tools;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
 
@@ -31,6 +33,54 @@ public class CreateAndLoad {
 		String query, basepathCsvFile;
 		int part, nodeParts, edgeParts;
 		timer = System.currentTimeMillis();
+
+
+		System.out.print("Get local_infile value: ");		
+		File localInfile = new File("local_infile_value");
+		boolean localInfileValue = false;
+		String line;		
+		query = "\"show variables where Variable_name='local_infile';\"";
+		if(hasPassword) {			
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+		}
+		try {			
+			//processBuilder.redirectError(new File("error.log"));
+			processBuilder.redirectOutput(localInfile);
+			processBuilder.start().waitFor();	
+			try(BufferedReader reader = new BufferedReader(new FileReader(localInfile))){
+				line = reader.readLine(); //header
+				if(line != null) {
+					line = reader.readLine();
+					if(line != null && line.startsWith("local_infile\t")) {
+						line = line.substring(13);						
+						localInfileValue = line.toUpperCase().equals("ON"); 												
+					}
+				}
+			}
+			localInfile.delete();
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println(String.valueOf(localInfileValue));
+
+		if(!localInfileValue) {
+			System.out.print("Temporarily setting local_infile value as 'true'");		
+			query = "\"set global local_infile=1;\"";
+			if(hasPassword) {			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+			}else {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+			}
+			try {			
+				processBuilder.start().waitFor();	
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}		
+
+
 		//DL
 		if(DOWNLOAD_LAST_DUMP) {
 			System.out.println("Downloading dump and converting it into CSV files (this may take a few minutes)... ");
@@ -100,7 +150,7 @@ public class CreateAndLoad {
 
 
 		System.out.println("Importing data: ");
-		
+
 		//Remove foreign key checks
 		System.out.print("\tRemoving foreign key checks to speed up the process... ");
 		query = "\"SET GLOBAL foreign_key_checks = 0;\"";
@@ -116,7 +166,7 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
-		
+
 		//Remove unique checks
 		System.out.print("\tRemoving unique checks to speed up the process... ");
 		query = "\"SET GLOBAL unique_checks = 0;\"";
@@ -182,7 +232,7 @@ public class CreateAndLoad {
 		}
 
 		//Add autocommit
-//		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
+		//		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
 		System.out.print("\tRemoving autocommit to speed up the process... ");
 		query = "\"SET GLOBAL AUTOCOMMIT = 0;\"";
 		if(hasPassword) {
@@ -197,7 +247,7 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
-		
+
 
 		//Count node and edge parts
 		tempFolder = new File(TEMP_CSV_FOLDER);
@@ -311,6 +361,21 @@ public class CreateAndLoad {
 			sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
 		}
 		
+		if(!localInfileValue) {
+			System.out.print("Resetting local_infile value as 'false'");		
+			query = "\"set global local_infile=0;\"";
+			if(hasPassword) {			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+			}else {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+			}
+			try {			
+				processBuilder.start().waitFor();	
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+
 		//Add autocommit
 		System.out.print("Adding autocommit... ");
 		query = "\"SET GLOBAL AUTOCOMMIT = 1;\"";
@@ -361,10 +426,10 @@ public class CreateAndLoad {
 		}
 		importTimer = (System.nanoTime() - importTimer) / 1_000_000;
 		System.out.println("done!");
-		
-		
 
-		
+
+
+
 		//Add unique checks
 		System.out.print("Adding unique checks... ");
 		query = "\"SET GLOBAL unique_checks = 1;\"";
@@ -407,7 +472,7 @@ public class CreateAndLoad {
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("Finished in "+format.format(timer / 1_000)+ " sec.");
 	}
-	
+
 
 	public static void deleteTemporary(File temporary) {
 		if(temporary.isFile()) {
@@ -501,7 +566,6 @@ public class CreateAndLoad {
 		System.out.println("\t-d/--database [DATABASE_NAME]: Database name (DEFAULT=\""+DB+"\")");
 		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\")");
 		System.out.println("\t-p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT=\""+PASSWORD+"\")");
-		System.out.println("\t-u/--username [USERNAME]: MySQL username (DEFAULT=\""+USERNAME+"\")");
 		System.out.println("\t--drop: Drop previous database with the same name (DEFAULT=\""+String.valueOf(DROP_IF_EXIST)+"\")");
 		System.out.println();
 		System.out.println("Other parameters: ");

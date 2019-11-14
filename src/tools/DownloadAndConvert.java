@@ -28,7 +28,7 @@ public class DownloadAndConvert {
 
 	private static final String DEFAULT_FOLDER = "__tmpRezoJDMCSV";
 	private static final boolean DEFAULT_CLEAN_INTERMEDIARY_FILES = false;
-	private static final int DEFAULT_PART_SIZE = 1_000_000;
+	private static final int DEFAULT_PART_SIZE = 100_000;
 
 
 	public static void main(String[] args) throws IOException {
