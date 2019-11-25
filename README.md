@@ -13,12 +13,13 @@ You might want to modify your configuration file ("my.ini", probably in C:\Progr
 There is no mandatory argument but you might need (or just want) to set some of them.
 
 **MySQL related parameters:** 
-*        -d/--database [DATABASE_NAME]: Database name (DEFAULT="rezoJDM)"
-*        -u/--username [USERNAME]: MySQL username (DEFAULT="root")
-*       -p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT="")
-*       --drop: Drop previous database with the same name (DEFAULT="false")
+ *        -d/--database [DATABASE_NAME]: Database name (DEFAULT="rezoJDM)"
+ *        -u/--username [USERNAME]: MySQL username (DEFAULT="root")
+ *       -p/--password [PASSWORD]: MySQL password, leave empty if there is no password (DEFAULT="")
+ *       --drop: Drop previous database with the same name (DEFAULT="false")
 
 **Other parameters:**
+ *       --log: Create logs for ouputs and errors from MySQL queries (DEFAULT="false")
  *       -i/--init [INIT_FILEPATH]: Filepath of the sql init file (DEFAULT="init.sql")
  *       -t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT="__tmpRezoJDMCSV")
  *       --keep: Do not delete the temporary folder and all its content before exiting (DEFAULT="false")
