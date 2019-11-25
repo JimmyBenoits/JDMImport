@@ -1,4 +1,4 @@
-MySQL Import tool for rezoJDM on a WINDOWS system. Other solutions exist for Unix. 
+MySQL Import tool for rezoJDM. 
 
 The program will fetch the last avalaible dump (in zip format, 1+GB) from jeuxdemots (http://www.jeuxdemots.org/JDM-LEXICALNET-FR/) and import it into a new MySQL database.
 
