@@ -77,8 +77,8 @@ public class CreateAndLoad {
 			if(LOG_MYSQL) {				
 				append(logMessage + System.lineSeparator(), mysqlErrorLog);
 				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-				processBuilder.redirectOutput(localInfile);
-			}
+			}	
+			processBuilder.redirectOutput(localInfile);
 			processBuilder.start().waitFor();	
 			try(BufferedReader reader = new BufferedReader(new FileReader(localInfile))){
 				line = reader.readLine(); //header
@@ -353,27 +353,27 @@ public class CreateAndLoad {
 
 		//Remove index on nodes
 		//USELESS WITH INNODB
-//		logMessage = "\tRemoving node index to speed up the process... ";
-//		System.out.print(logMessage);
-//		query = "ALTER TABLE 'nodes' DISABLE KEYS;";
-//		if(hasPassword) {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-//		}else {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-//		}
-//		try {
-//			if(LOG_MYSQL) {		
-//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-//			}
-//			processBuilder.start().waitFor();					
-//		} catch (IOException | InterruptedException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		System.out.println("done!");
+		//		logMessage = "\tRemoving node index to speed up the process... ";
+		//		System.out.print(logMessage);
+		//		query = "ALTER TABLE 'nodes' DISABLE KEYS;";
+		//		if(hasPassword) {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		//		}else {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		//		}
+		//		try {
+		//			if(LOG_MYSQL) {		
+		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
+		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+		//			}
+		//			processBuilder.start().waitFor();					
+		//		} catch (IOException | InterruptedException e) {
+		//			e.printStackTrace();
+		//			System.exit(1);
+		//		}
+		//		System.out.println("done!");
 
 		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
 		part = 1;	
@@ -415,31 +415,31 @@ public class CreateAndLoad {
 
 
 		System.out.println("\tedges (this may take a little while, grab a coffee or two)... ");
-		
+
 		//USELESS WITH INNODB
 		//Remove index on edges
-//		logMessage = "\tRemoving edge index to speed up the process... ";
-//		System.out.print(logMessage);
-//		query = "ALTER TABLE 'edges' DISABLE KEYS;";
-//		if(hasPassword) {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-//		}else {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-//		}
-//		try {
-//			if(LOG_MYSQL) {		
-//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-//			}
-//			processBuilder.start().waitFor();					
-//		} catch (IOException | InterruptedException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		System.out.println("done!");
-		
+		//		logMessage = "\tRemoving edge index to speed up the process... ";
+		//		System.out.print(logMessage);
+		//		query = "ALTER TABLE 'edges' DISABLE KEYS;";
+		//		if(hasPassword) {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		//		}else {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		//		}
+		//		try {
+		//			if(LOG_MYSQL) {		
+		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
+		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+		//			}
+		//			processBuilder.start().waitFor();					
+		//		} catch (IOException | InterruptedException e) {
+		//			e.printStackTrace();
+		//			System.exit(1);
+		//		}
+		//		System.out.println("done!");
+
 		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "relations_";
 		part = 1;	
 		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
@@ -526,54 +526,54 @@ public class CreateAndLoad {
 
 		//USELESS WITH INNODB
 		//Add index on nodes
-//		logMessage = "\tEnabling node index... ";
-//		System.out.print(logMessage);
-//		query = "ALTER TABLE 'nodes' ENABLE KEYS;";
-//		if(hasPassword) {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-//		}else {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-//		}
-//		try {
-//			if(LOG_MYSQL) {			
-//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-//			}
-//			processBuilder.start().waitFor();					
-//		} catch (IOException | InterruptedException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		System.out.println("done!");
+		//		logMessage = "\tEnabling node index... ";
+		//		System.out.print(logMessage);
+		//		query = "ALTER TABLE 'nodes' ENABLE KEYS;";
+		//		if(hasPassword) {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		//		}else {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		//		}
+		//		try {
+		//			if(LOG_MYSQL) {			
+		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
+		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+		//			}
+		//			processBuilder.start().waitFor();					
+		//		} catch (IOException | InterruptedException e) {
+		//			e.printStackTrace();
+		//			System.exit(1);
+		//		}
+		//		System.out.println("done!");
 
 		//USELESS WITH INNODB
 		//Add index on nodes
-//		logMessage = "\tEnable edge index (this could take some time)... ";
-//		System.out.print(logMessage);
-//		query = "ALTER TABLE 'edges' ENABLE KEYS;";
-//		importTimer = System.nanoTime();
-//		if(hasPassword) {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-//		}else {
-//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-//		}
-//		try {	
-//			if(LOG_MYSQL) {		
-//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-//			}
-//			processBuilder.start().waitFor();
-//
-//		} catch (IOException | InterruptedException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//		importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-//		System.out.println("done!");
+		//		logMessage = "\tEnable edge index (this could take some time)... ";
+		//		System.out.print(logMessage);
+		//		query = "ALTER TABLE 'edges' ENABLE KEYS;";
+		//		importTimer = System.nanoTime();
+		//		if(hasPassword) {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+		//		}else {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+		//		}
+		//		try {	
+		//			if(LOG_MYSQL) {		
+		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
+		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+		//			}
+		//			processBuilder.start().waitFor();
+		//
+		//		} catch (IOException | InterruptedException e) {
+		//			e.printStackTrace();
+		//			System.exit(1);
+		//		}
+		//		importTimer = (System.nanoTime() - importTimer) / 1_000_000;
+		//		System.out.println("done!");
 
 
 
@@ -713,7 +713,7 @@ public class CreateAndLoad {
 		}
 	}
 
-	
+
 	private static void append(String message, File file) {
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))){
 			writer.write(message);
