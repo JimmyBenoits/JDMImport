@@ -21,7 +21,8 @@ public class CreateAndLoad {
 	private static boolean DROP_IF_EXIST = false; // --drop (flag)
 	private static boolean CLEAN_AFTER = true; // --keep (flag)
 	private static boolean LOG_MYSQL = false; // --log (flag)
-	private static String INIT_FILEPATH = "init.sql"; //-i or --init 
+	private static String INIT_FILEPATH = "init.sql"; //-i or --init
+	private static String UPDATE_FILEPATH = "update.sql"; //-u or --update 
 	private static String TEMP_CSV_FOLDER = "__tmpRezoJDMCSV"; //-t or --temp
 	private static int PARTITIONS_SIZE = 100_000; //-s or --size
 
@@ -63,7 +64,7 @@ public class CreateAndLoad {
 		timer = System.currentTimeMillis();
 
 		logMessage = "Get local_infile value: ";
-		System.out.println(logMessage);
+		System.out.print(logMessage);
 		File localInfile = new File("local_infile_value");
 		boolean localInfileValue = false;
 		String line;		
@@ -98,7 +99,7 @@ public class CreateAndLoad {
 
 		if(!localInfileValue) {
 			logMessage = "Temporarily setting local_infile value as 'true'";
-			System.out.print(logMessage);		
+			System.out.println(logMessage);		
 			query = "set global local_infile=1;";
 			if(hasPassword) {			
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
@@ -174,12 +175,13 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
+		
 		//TABLES INITIALISATION 
 		File sqlFile = new File(INIT_FILEPATH);
 		if(sqlFile.exists()) {
 			logMessage = "Tables initialisation from file \""+sqlFile.getName()+"\"... ";
 			System.out.print(logMessage);
-			query = "source "+sqlFile.getAbsolutePath()+"";
+			query = "source "+sqlFile.getAbsolutePath();
 			if(hasPassword) {
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
 			}else {
@@ -349,32 +351,7 @@ public class CreateAndLoad {
 		}
 
 
-		System.out.println("\tnodes (this may take a little while, maybe grab a coffee)... ");
-
-		//Remove index on nodes
-		//USELESS WITH INNODB
-		//		logMessage = "\tRemoving node index to speed up the process... ";
-		//		System.out.print(logMessage);
-		//		query = "ALTER TABLE 'nodes' DISABLE KEYS;";
-		//		if(hasPassword) {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		//		}else {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		//		}
-		//		try {
-		//			if(LOG_MYSQL) {		
-		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-		//			}
-		//			processBuilder.start().waitFor();					
-		//		} catch (IOException | InterruptedException e) {
-		//			e.printStackTrace();
-		//			System.exit(1);
-		//		}
-		//		System.out.println("done!");
-
+		System.out.println("\tnodes... ");
 		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
 		part = 1;	
 		sqlFile = new File(basepathCsvFile + String.valueOf(part) + ".csv");
@@ -414,31 +391,8 @@ public class CreateAndLoad {
 		}
 
 
-		System.out.println("\tedges (this may take a little while, grab a coffee or two)... ");
+		System.out.println("\tedges (this may take a little while, grab a coffee)... ");
 
-		//USELESS WITH INNODB
-		//Remove index on edges
-		//		logMessage = "\tRemoving edge index to speed up the process... ";
-		//		System.out.print(logMessage);
-		//		query = "ALTER TABLE 'edges' DISABLE KEYS;";
-		//		if(hasPassword) {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		//		}else {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		//		}
-		//		try {
-		//			if(LOG_MYSQL) {		
-		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-		//			}
-		//			processBuilder.start().waitFor();					
-		//		} catch (IOException | InterruptedException e) {
-		//			e.printStackTrace();
-		//			System.exit(1);
-		//		}
-		//		System.out.println("done!");
 
 		basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "relations_";
 		part = 1;	
@@ -481,7 +435,7 @@ public class CreateAndLoad {
 
 		if(!localInfileValue) {
 			logMessage = "Resetting local_infile value as 'false'";
-			System.out.print(logMessage);		
+			System.out.println(logMessage);		
 			query = "set global local_infile=0;";
 			if(hasPassword) {			
 				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
@@ -523,60 +477,6 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");	
-
-		//USELESS WITH INNODB
-		//Add index on nodes
-		//		logMessage = "\tEnabling node index... ";
-		//		System.out.print(logMessage);
-		//		query = "ALTER TABLE 'nodes' ENABLE KEYS;";
-		//		if(hasPassword) {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		//		}else {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		//		}
-		//		try {
-		//			if(LOG_MYSQL) {			
-		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-		//			}
-		//			processBuilder.start().waitFor();					
-		//		} catch (IOException | InterruptedException e) {
-		//			e.printStackTrace();
-		//			System.exit(1);
-		//		}
-		//		System.out.println("done!");
-
-		//USELESS WITH INNODB
-		//Add index on nodes
-		//		logMessage = "\tEnable edge index (this could take some time)... ";
-		//		System.out.print(logMessage);
-		//		query = "ALTER TABLE 'edges' ENABLE KEYS;";
-		//		importTimer = System.nanoTime();
-		//		if(hasPassword) {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
-		//		}else {
-		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
-		//		}
-		//		try {	
-		//			if(LOG_MYSQL) {		
-		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
-		//				append(logMessage + System.lineSeparator(), mysqlOutputLog);
-		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
-		//				processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
-		//			}
-		//			processBuilder.start().waitFor();
-		//
-		//		} catch (IOException | InterruptedException e) {
-		//			e.printStackTrace();
-		//			System.exit(1);
-		//		}
-		//		importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-		//		System.out.println("done!");
-
-
-
 
 		//Add unique checks
 		logMessage = "Adding unique checks... ";
@@ -623,6 +523,35 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
+	
+		
+		//TABLES UPDATE 
+		sqlFile = new File(UPDATE_FILEPATH);
+		if(sqlFile.exists()) {
+			logMessage = "Updating tables, adding index from file \""+sqlFile.getName()+"\"... ";
+			System.out.print(logMessage+" (this may take a little while, grab a coffee or two)");
+			query = "source "+sqlFile.getAbsolutePath();
+			if(hasPassword) {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", DB, "-e", query);
+			}else {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, DB, "-e", query);				
+			}
+			try {
+				if(LOG_MYSQL) {		
+					append(logMessage + System.lineSeparator(), mysqlErrorLog);
+					append(logMessage + System.lineSeparator(), mysqlOutputLog);
+					processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+					processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+				}
+				processBuilder.start().waitFor();					
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			System.out.println("done!");
+		}else {
+			System.out.println("Skipped Table updating because \""+sqlFile.getAbsolutePath()+"\" is missing...");
+		}
 
 
 		if(CLEAN_AFTER) {
@@ -686,6 +615,13 @@ public class CreateAndLoad {
 					System.err.println("No value for found for argument \""+arg+"\", using default ("+INIT_FILEPATH+")");
 				}
 			}
+			else if(arg.equals("-u") || arg.equals("--update")) {
+				if(index < length) {
+					UPDATE_FILEPATH = args[index++];
+				}else {
+					System.err.println("No value for found for argument \""+arg+"\", using default ("+UPDATE_FILEPATH+")");
+				}
+			}
 			else if(arg.equals("-t") || arg.equals("--temp")) {
 				if(index < length) {
 					TEMP_CSV_FOLDER = args[index++];
@@ -742,6 +678,7 @@ public class CreateAndLoad {
 		System.out.println("Other parameters: ");
 		System.out.println("\t--log: Create logs for ouputs and errors from MySQL queries (DEFAULT=\""+String.valueOf(LOG_MYSQL)+"\")");
 		System.out.println("\t-i/--init [INIT_FILEPATH]: Filepath of the sql init file (DEFAULT=\""+INIT_FILEPATH+"\")");
+		System.out.println("\t-u/--update [UPDATE_FILEPATH]: Filepath of the sql update file (DEFAULT=\""+UPDATE_FILEPATH+"\")");
 		System.out.println("\t-t/--temp [TEMPORARY_DOWNLOAD_DIRPATH]: Filepath of the temporary directory storing the dump and the csv files (DEFAULT=\""+TEMP_CSV_FOLDER+"\")");
 		System.out.println("\t--keep: Do not delete the temporary folder and all its content before exiting "
 				+ "(DEFAULT=\""+String.valueOf(!CLEAN_AFTER)+"\")");
