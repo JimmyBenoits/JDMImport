@@ -63,6 +63,64 @@ public class CreateAndLoad {
 		int part, nodeParts, edgeParts;
 		timer = System.currentTimeMillis();
 
+		//SQL_MODE
+		logMessage = "Get sql_mode value: ";
+		System.out.print(logMessage);
+		File sql_mode = new File("sql_mode");
+		String sqlModes = "";		
+		query = "show variables where Variable_name='sql_mode';";
+		if(hasPassword) {			
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+		}else {
+			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+		}
+		try {		
+			if(LOG_MYSQL) {				
+				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+			}	
+			processBuilder.redirectOutput(sql_mode);
+			processBuilder.start().waitFor();	
+			try(BufferedReader reader = new BufferedReader(new FileReader(sql_mode))){
+				String line2 = reader.readLine(); //header
+				if(line2 != null) {
+					line2 = reader.readLine();
+					if(line2 != null && line2.startsWith("sql_mode\t")) {
+						sqlModes = line2.substring(9).trim();												 											
+					}
+				}
+			}
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println(sqlModes);
+		if(!sqlModes.contains("NO_AUTO_VALUE_ON_ZERO")) {
+			logMessage = "Temporarily adding 'NO_AUTO_VALUE_ON_ZERO' in sql_mode";
+			System.out.println(logMessage);				
+			query = "set global sql_mode='NO_AUTO_VALUE_ON_ZERO";
+			if(!sqlModes.isEmpty()) {
+				query +=","+sqlModes;
+			}
+			query += "';";
+			if(hasPassword) {			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+			}else {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+			}
+			try {	
+				if(LOG_MYSQL) {		
+					append(logMessage + System.lineSeparator(), mysqlErrorLog);
+					append(logMessage + System.lineSeparator(), mysqlOutputLog);
+					processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+					processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+				}
+				processBuilder.start().waitFor();	
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}	
+
+
 		logMessage = "Get local_infile value: ";
 		System.out.print(logMessage);
 		File localInfile = new File("local_infile_value");
@@ -118,6 +176,61 @@ public class CreateAndLoad {
 				e.printStackTrace();
 			}
 		}		
+
+		//SQL_MODE
+		//		logMessage = "Get sql_mode value: ";
+		//		System.out.print(logMessage);
+		//		File sql_mode = new File("local_infile_value");
+		//		String sqlModes = "";		
+		//		query = "show variables where Variable_name='sql_mode';";
+		//		if(hasPassword) {			
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+		//		}else {
+		//			processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+		//		}
+		//		try {		
+		//			if(LOG_MYSQL) {				
+		//				append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//				processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//			}	
+		//			processBuilder.redirectOutput(sql_mode);
+		//			processBuilder.start().waitFor();	
+		//			try(BufferedReader reader = new BufferedReader(new FileReader(sql_mode))){
+		//				line = reader.readLine(); //header
+		//				if(line != null) {
+		//					line = reader.readLine();
+		//					if(line != null && line.startsWith("sql_mode\t")) {
+		//						sqlModes = line.substring(9);												 											
+		//					}
+		//				}
+		//			}
+		//			localInfile.delete();
+		//		} catch (IOException | InterruptedException e) {
+		//			e.printStackTrace();
+		//		}
+		//		System.out.println(String.valueOf(localInfileValue));
+
+		//		if(!localInfileValue) {
+		//			logMessage = "Temporarily setting local_infile value as 'true'";
+		//			System.out.println(logMessage);		
+		//			query = "set global local_infile=1;";
+		//			if(hasPassword) {			
+		//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+		//			}else {
+		//				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+		//			}
+		//			try {	
+		//				if(LOG_MYSQL) {		
+		//					append(logMessage + System.lineSeparator(), mysqlErrorLog);
+		//					append(logMessage + System.lineSeparator(), mysqlOutputLog);
+		//					processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+		//					processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+		//				}
+		//				processBuilder.start().waitFor();	
+		//			} catch (IOException | InterruptedException e) {
+		//				e.printStackTrace();
+		//			}
+		//		}	
 
 
 		//DL
@@ -175,7 +288,7 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
-		
+
 		//TABLES INITIALISATION 
 		File sqlFile = new File(INIT_FILEPATH);
 		if(sqlFile.exists()) {
@@ -523,8 +636,8 @@ public class CreateAndLoad {
 			System.exit(1);
 		}
 		System.out.println("done!");
-	
-		
+
+
 		//TABLES UPDATE 
 		sqlFile = new File(UPDATE_FILEPATH);
 		if(sqlFile.exists()) {
@@ -551,6 +664,28 @@ public class CreateAndLoad {
 			System.out.println("done!");
 		}else {
 			System.out.println("Skipped Table updating because \""+sqlFile.getAbsolutePath()+"\" is missing...");
+		}
+		
+		if(!sqlModes.contains("NO_AUTO_VALUE_ON_ZERO")) {
+			logMessage = "Removing 'NO_AUTO_VALUE_ON_ZERO' in sql_mode";
+			System.out.println(logMessage);				
+			query = "set global sql_mode='"+sqlModes+"';";
+			if(hasPassword) {			
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-p\""+PASSWORD+"\"", "-e", query);
+			}else {
+				processBuilder = new ProcessBuilder("mysql", "-u", USERNAME, "-e", query);			
+			}
+			try {	
+				if(LOG_MYSQL) {		
+					append(logMessage + System.lineSeparator(), mysqlErrorLog);
+					append(logMessage + System.lineSeparator(), mysqlOutputLog);
+					processBuilder.redirectError(Redirect.appendTo(mysqlErrorLog));
+					processBuilder.redirectOutput(Redirect.appendTo(mysqlOutputLog));
+				}
+				processBuilder.start().waitFor();	
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 
