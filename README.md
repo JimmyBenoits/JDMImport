@@ -21,6 +21,7 @@ There is no mandatory argument but you might need (or just want) to set some of 
 **Other parameters:**
  *       --log: Create logs for ouputs and errors from MySQL queries (DEFAULT="false")
  *       -i/--init INIT_FILEPATH: Filepath of the sql init file (DEFAULT="init.sql")
+ *       -u/--update UPDATE_FILEPATH: Filepath of the sql update file (DEFAULT="update.sql")
  *       -t/--temp TEMPORARY_DOWNLOAD_DIRPATH: Filepath of the temporary directory storing the dump and the csv files (DEFAULT="__tmpRezoJDMCSV")
  *       --keep: Do not delete the temporary folder and all its content before exiting (DEFAULT="false")
  *       --no-download: Do not attempt to download the lastest dump and instead try to read existing file from the temporary folder (DEFAULT="false")
