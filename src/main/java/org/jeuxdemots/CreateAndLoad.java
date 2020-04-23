@@ -713,7 +713,7 @@ public class CreateAndLoad {
         String arg;
 
         while (index < length) {
-            arg = args[index++].toLowerCase();
+            arg = args[index++];
             if (arg.equals("-h") || arg.equals("--help")) {
                 usage();
             } else if (arg.equals("-d") || arg.equals("--database")) {
