@@ -734,7 +734,7 @@ public class CreateAndLoad {
                 } else {
                     System.err.println("No value for found for argument \"" + arg + "\", using default (" + PASSWORD + ")");
                 }
-            } else if (arg.equals("-h") || arg.equals("--host")) {
+            } else if (arg.equals("-H") || arg.equals("--host")) {
                 if (index < length) {
                     HOST = args[index++];
                 } else {

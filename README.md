@@ -35,7 +35,7 @@ There is no mandatory argument but you might need (or just want) to set some of 
  *        -d/--database DATABASE_NAME: Database name (DEFAULT="rezoJDM)"
  *        -u/--username USERNAME: MySQL username (DEFAULT="root")
  *       -p/--password PASSWORD: MySQL password, leave empty if there is no password (DEFAULT="")
- *       -h/--host HOST: MySQL server hostname (DEFAULT="localhost")
+ *       -H/--host HOST: MySQL server hostname (DEFAULT="localhost")
  *       -P/--port PORT: MySQL server port (DEFAULT="3306")
  *       --drop: Drop previous database with the same name (DEFAULT="false")
 
