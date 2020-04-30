@@ -1,5 +1,7 @@
 package org.jeuxdemots;
 
+import me.tongfei.progressbar.ProgressBar;
+
 import java.io.*;
 import java.lang.ProcessBuilder.Redirect;
 import java.text.DecimalFormat;
@@ -354,24 +356,24 @@ public class CreateAndLoad {
         basepathCsvFile = TEMP_CSV_FOLDER + File.separator + "nodes_";
         part = 1;
         sqlFile = new File(basepathCsvFile + part + ".csv");
-        if (!sqlFile.exists()) {
-            System.out.println("Skipped nodes import because \"" + sqlFile.getAbsolutePath() + "\" is missing... maybe the download went wrong?");
-        }
-        while (sqlFile.exists()) {
-            query = "load data local infile '" + TEMP_CSV_FOLDER + "/nodes_" + part + ".csv" + "' " +
-                    "into table nodes " +
-                    "fields " +
-                    "terminated by '|' " +
-                    "IGNORE 1 LINES " +
-                    "(id,name,type,weight);commit;";
-            logMessage = "\t\tpart#" + part + "/" + nodeParts + "... ";
-            System.out.print(logMessage);
-            importTimer = System.nanoTime();
-            runMySQL(buildMySQLCommandLine(query, DB, true), logMessage);
-            importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-            System.out.println("done in " + format.format(importTimer) + " ms.");
-            ++part;
-            sqlFile = new File(basepathCsvFile + part + ".csv");
+
+        try (final ProgressBar progressBar = new ProgressBar("Loading edges", nodeParts)) {
+            if (!sqlFile.exists()) {
+                System.out.println("Skipped nodes import because \"" + sqlFile.getAbsolutePath() + "\" is missing... maybe the download went wrong?");
+            }
+            while (sqlFile.exists()) {
+                query = "load data local infile '" + TEMP_CSV_FOLDER + "/nodes_" + part + ".csv" + "' " +
+                        "into table nodes " +
+                        "fields " +
+                        "terminated by '|' " +
+                        "IGNORE 1 LINES " +
+                        "(id,name,type,weight);commit;";
+
+                runMySQL(buildMySQLCommandLine(query, DB, true), logMessage);
+                progressBar.step();
+                ++part;
+                sqlFile = new File(basepathCsvFile + part + ".csv");
+            }
         }
 
 
@@ -385,21 +387,20 @@ public class CreateAndLoad {
             System.out.println("Skipped edges import because \"" + sqlFile.getAbsolutePath() + "\" is missing... maybe the download went wrong?");
         }
 
-        while (sqlFile.exists()) {
-            logMessage = "\t\tpart#" + part + "/" + edgeParts + "... ";
-            System.out.print(logMessage);
-            importTimer = System.nanoTime();
-            query = "load data local infile '" + TEMP_CSV_FOLDER + "/relations_" + part + ".csv" + "' " +
-                    "into table edges " +
-                    "fields " +
-                    "terminated by '|' " +
-                    "IGNORE 1 LINES " +
-                    "(id,source,destination,type,weight);commit;";
-            runMySQL(buildMySQLCommandLine(query, DB, true), logMessage);
-            importTimer = (System.nanoTime() - importTimer) / 1_000_000;
-            System.out.println("done in " + format.format(importTimer) + " ms.");
-            ++part;
-            sqlFile = new File(basepathCsvFile + part + ".csv");
+        try(ProgressBar progressBar = new ProgressBar("Loading edges", edgeParts)) {
+
+            while (sqlFile.exists()) {
+                query = "load data local infile '" + TEMP_CSV_FOLDER + "/relations_" + part + ".csv" + "' " +
+                        "into table edges " +
+                        "fields " +
+                        "terminated by '|' " +
+                        "IGNORE 1 LINES " +
+                        "(id,source,destination,type,weight);commit;";
+                runMySQL(buildMySQLCommandLine(query, DB, true), logMessage);
+                progressBar.step();
+                ++part;
+                sqlFile = new File(basepathCsvFile + part + ".csv");
+            }
         }
 
         if (!localInfileValue) {
