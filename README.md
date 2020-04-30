@@ -21,7 +21,7 @@ The jar is generated in `target/JDMImport.jar`, the main class declared in the m
 
 To run the importer you may use the executable jar 
 ```$bash
-java -jar target/JDMImport.jar [ARGS]
+java -jar target/JDMImport-jar-with-dependencies.jar [ARGS]
 ```
 
 **MySQL must be installed and added to the system PATH variable.**

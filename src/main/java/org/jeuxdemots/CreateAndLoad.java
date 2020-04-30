@@ -357,7 +357,7 @@ public class CreateAndLoad {
         part = 1;
         sqlFile = new File(basepathCsvFile + part + ".csv");
 
-        try (final ProgressBar progressBar = new ProgressBar("Loading edges", nodeParts)) {
+        try (final ProgressBar progressBar = new ProgressBar("Loading nodes from part files", nodeParts)) {
             if (!sqlFile.exists()) {
                 System.out.println("Skipped nodes import because \"" + sqlFile.getAbsolutePath() + "\" is missing... maybe the download went wrong?");
             }
@@ -387,7 +387,7 @@ public class CreateAndLoad {
             System.out.println("Skipped edges import because \"" + sqlFile.getAbsolutePath() + "\" is missing... maybe the download went wrong?");
         }
 
-        try(ProgressBar progressBar = new ProgressBar("Loading edges", edgeParts)) {
+        try(ProgressBar progressBar = new ProgressBar("Loading edges from part files", edgeParts)) {
 
             while (sqlFile.exists()) {
                 query = "load data local infile '" + TEMP_CSV_FOLDER + "/relations_" + part + ".csv" + "' " +
